@@ -4,7 +4,7 @@
 
 namespace C_Project.EnumHelpers
 {
-    internal class EnumHelper
+    internal static class EnumHelper
     {
 
         public static string GetDisplayName(this STATUS_FILE status)

@@ -1,5 +1,6 @@
 ﻿using C_Project.Classes;
 using C_Project.Enums;
+using Spectre.Console;
 
 List<User> users = new List<User>()
 {
@@ -21,14 +22,14 @@ List<User> users = new List<User>()
 
 List<Book> bookList = new List<Book>
 {
-    // Fantasy (GENRE_FILE.FANTASY_FILE = 0)
-    new ("The Hobbit", "J.R.R. Tolkien", new DateTime(1937, 9, 21), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
+    // Fantasy
+    new Book("The Hobbit", "J.R.R. Tolkien", new DateTime(1937, 9, 21), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("The Fellowship of the Ring", "J.R.R. Tolkien", new DateTime(1954, 7, 29), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("The Two Towers", "J.R.R. Tolkien", new DateTime(1954, 11, 11), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("The Return of the King", "J.R.R. Tolkien", new DateTime(1955, 10, 20), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Harry Potter and the Sorcerer's Stone", "J.K. Rowling", new DateTime(1997, 6, 26), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Harry Potter and the Chamber of Secrets", "J.K. Rowling", new DateTime(1998, 7, 2), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
-    new Book("Harry Potter and the Prisoner of   Azkaban", "J.K. Rowling", new DateTime(1999, 7, 8), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
+    new Book("Harry Potter and the Prisoner of Azkaban", "J.K. Rowling", new DateTime(1999, 7, 8), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Harry Potter and the Goblet of Fire", "J.K. Rowling", new DateTime(2000, 7, 8), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("A Game of Thrones", "George R.R. Martin", new DateTime(1996, 8, 6), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("A Clash of Kings", "George R.R. Martin", new DateTime(1998, 11, 16), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
@@ -48,7 +49,7 @@ List<Book> bookList = new List<Book>
     new Book("The Ocean at the End of the Lane", "Neil Gaiman", new DateTime(2013, 6, 18), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Stardust", "Neil Gaiman", new DateTime(1999, 4, 1), GENRE_FILE.FANTASY_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
 
-    // Detective (GENRE_FILE.DETECTIVE_FILE = 1)
+    // Detective
     new Book("A Study in Scarlet", "Arthur Conan Doyle", new DateTime(1887, 11, 1), GENRE_FILE.DETECTIVE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("The Sign of the Four", "Arthur Conan Doyle", new DateTime(1890, 2, 1), GENRE_FILE.DETECTIVE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("The Adventures of Sherlock Holmes", "Arthur Conan Doyle", new DateTime(1892, 10, 14), GENRE_FILE.DETECTIVE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
@@ -75,7 +76,7 @@ List<Book> bookList = new List<Book>
     new Book("The Da Vinci Code", "Dan Brown", new DateTime(2003, 3, 18), GENRE_FILE.DETECTIVE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Angels & Demons", "Dan Brown", new DateTime(2000, 5, 29), GENRE_FILE.DETECTIVE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
 
-    // Romance (GENRE_FILE.ROMANCE_FILE = 2)
+    // Romance
     new Book("Pride and Prejudice", "Jane Austen", new DateTime(1813, 1, 28), GENRE_FILE.ROMANCE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Sense and Sensibility", "Jane Austen", new DateTime(1811, 1, 1), GENRE_FILE.ROMANCE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Jane Eyre", "Charlotte Bronte", new DateTime(1847, 10, 16), GENRE_FILE.ROMANCE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
@@ -102,7 +103,7 @@ List<Book> bookList = new List<Book>
     new Book("Redwood Love", "Kylie Scott", new DateTime(2017, 6, 13), GENRE_FILE.ROMANCE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Wuthering Heights", "Emily Bronte", new DateTime(1847, 12, 1), GENRE_FILE.ROMANCE_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
 
-    // Thriller (GENRE_FILE.THRILLER_FILE = 3)
+    // Thriller
     new Book("The Silence of the Lambs", "Thomas Harris", new DateTime(1988, 5, 1), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Red Dragon", "Thomas Harris", new DateTime(1981, 10, 1), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Gone Girl", "Gillian Flynn", new DateTime(2012, 5, 24), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
@@ -114,5 +115,79 @@ List<Book> bookList = new List<Book>
     new Book("The Girl Who Played with Fire", "Stieg Larsson", new DateTime(2006, 6, 26), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("The Girl Who Kicked the Hornets' Nest", "Stieg Larsson", new DateTime(2007, 5, 25), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
     new Book("Shutter Island", "Dennis Lehane", new DateTime(2003, 4, 15), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE),
-    new Book("Mystic River", "Dennis Lehane", new DateTime(2001, 2, 1), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE,
+    new Book("Mystic River", "Dennis Lehane", new DateTime(2001, 2, 1), GENRE_FILE.THRILLER_FILE, STATUS_FILE.HAVENOTREAD_FILE, RATING_FILE.POOR_RATING_FILE)
+};
 
+
+
+
+while (true)
+{
+    try
+    {
+        Console.WriteLine("Welcome!! pls sign-up or log-in to accsess your DIGITAL LIBRARY ");
+
+        Console.WriteLine("1.Log-In");
+
+        Console.WriteLine("2.Sign-In");
+
+        int input = Convert.ToInt32(Console.ReadLine());
+
+
+        switch (input)
+        {
+            case 1:
+                Console.Write("Enter Your Name:");
+
+                string name = Console.ReadLine();
+
+                Console.Write("Enter Your Password:");
+                string password = Console.ReadLine();
+
+                // Search the list for a user matching both name and password
+                var loggedInUser = users.FirstOrDefault(u => u.Name == name && u.Password == password);
+
+                if (loggedInUser == null)
+                {
+                    // Throws an error (stops execution and crashes with an exception)
+                    throw new UnauthorizedAccessException("Error: Invalid username or password!");
+                }
+                else
+                {
+                    // Success!
+                    Console.WriteLine($"Login successful! Welcome To Your Digital Library : {loggedInUser.Name}.");
+
+                    Console.WriteLine("Select Your");
+
+                }
+
+
+                break;
+
+
+            case 2:
+
+                Console.Write("Enter Your Name:");
+
+                string name1 = Console.ReadLine();
+
+                Console.Write("Enter Your Password:");
+
+                string password1 = Console.ReadLine();
+
+                new User(name1, password1);
+
+                users.Add(new User(name1, password1));
+
+                break;
+
+        }
+
+
+    }
+
+    catch (Exception ex)
+    {
+        AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
+    }
+}

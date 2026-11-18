@@ -9,7 +9,7 @@ namespace C_Project.Classes
 
         private int counter_ = 0;
 
-        public Book(string title, string author, DateTime releaseYear, GENRE_FILE genre, STATUS_FILE status)
+        public Book(string title, string author, DateTime releaseYear, GENRE_FILE genre, STATUS_FILE status, RATING_FILE rating)
         {
             ID = counter_++;
             Title = title;
