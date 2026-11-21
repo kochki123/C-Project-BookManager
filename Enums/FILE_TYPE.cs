@@ -2,8 +2,11 @@
 {
     internal enum FILE_TYPE
     {
-        GENRE_FILE = 0,
-        STATUS_FILE = 1,
-        RATING_FILE = 2
+        BOOKS_FILE = 0,
+        GENRE_FILE = 1,
+        RATING_FILE = 2,
+        STATUS_FILE = 3,
+        USERS_FILE = 4,
+        MYBOOKS_FILE = 5
     }
 }

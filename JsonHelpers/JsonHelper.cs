@@ -9,11 +9,13 @@ namespace C_Project.JsonHelpers
     {
         private static readonly string[] _files = new string[]
         {
-            @"C:\Book_Files\Books.json",
-            @"C:\Book_Files\Genre.json",
-            @"C:\Book_Files\Rating.json",
-            @"C:\Book_Files\Status.json",
-            @"C:\Book_Files\Users.json"
+
+            @"C:\Users\student\Desktop\Book_Files\Books.json",
+            @"C:\Users\student\Desktop\Book_Files\Genre.json",
+            @"C:\Users\student\Desktop\Book_Files\Rating.json",
+            @"C:\Users\student\Desktop\Book_Files\Status.json",
+            @"C:\Users\student\Desktop\Book_Files\Users.json",
+            @"C:\Users\student\Desktop\Book_Files\MyBooks.json"
         };
 
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions()
