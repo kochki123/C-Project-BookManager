@@ -15,7 +15,8 @@ namespace C_Project.JsonHelpers
             @"C:\Users\student\Desktop\Book_Files\Rating.json",
             @"C:\Users\student\Desktop\Book_Files\Status.json",
             @"C:\Users\student\Desktop\Book_Files\Users.json",
-            @"C:\Users\student\Desktop\Book_Files\MyBooks.json"
+            @"C:\Users\student\Desktop\Book_Files\MyBooks.json",
+            @"C:\Users\student\Desktop\Book_Files\Admins.json"
         };
 
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions()

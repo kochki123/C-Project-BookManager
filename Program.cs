@@ -1,141 +1,144 @@
 ﻿using C_Project.Classes;
+using C_Project.EnumHelpers;
 using C_Project.Enums;
 using C_Project.JsonHelpers;
 using Spectre.Console;
+using System.Text;
 
-// ============================================================================
-// 1. STARTUP & DATA LOADING
-// ============================================================================
+Console.OutputEncoding = Encoding.UTF8;
+
 AnsiConsole.Clear();
-AnsiConsole.Write(
-    new FigletText("Digital Library")
-        .Centered()
-        .Color(Color.Cyan1));
-AnsiConsole.Write(new Rule("[grey]Loading Library Data[/]").RuleStyle("grey"));
+PrintReadingRoomBanner();
+AnsiConsole.Write(new Rule("[darkgoldenrod]Opening the Reading Room & Archives[/]").RuleStyle("darkgoldenrod"));
 
 List<User> users = new List<User>();
 List<Book> bookList = new List<Book>();
+List<User> admins = new List<User>();
 
 await AnsiConsole.Status()
-    .StartAsync("Reading users and books from JSON...", async ctx =>
+    .StartAsync("[wheat1]Unrolling catalog scrolls and member ledgers...[/]", async ctx =>
     {
         ctx.Spinner(Spinner.Known.Dots);
-        ctx.SpinnerStyle(Style.Parse("cyan1"));
+        ctx.SpinnerStyle(Style.Parse("gold1"));
 
-        users = await JsonHelper<User>.ReadFromJsonAsync(FILE_TYPE.USERS_FILE);
-        bookList = await JsonHelper<Book>.ReadFromJsonAsync(FILE_TYPE.BOOKS_FILE);
+        users = await SafeReadList<User>(FILE_TYPE.USERS_FILE);
+        bookList = await SafeReadList<Book>(FILE_TYPE.BOOKS_FILE);
+        admins = await SafeReadList<User>(FILE_TYPE.ADMIN_FILE);
     });
 
-AnsiConsole.MarkupLine($"[green]Loaded[/] [bold]{users.Count}[/] users and [bold]{bookList.Count}[/] books.");
+if (admins.Count == 0)
+{
+    admins = new List<User>
+    {
+        new User("AdminOne", "admin123"),
+        new User("AdminTwo", "admin123"),
+        new User("AdminThree", "admin123")
+    };
+}
 
-// ============================================================================
-// 2. MAIN APPLICATION LOOP (LOG-IN / SIGN-UP / EXIT)
-// ============================================================================
+AnsiConsole.MarkupLine(
+    $"[wheat1]Archives Ready:[/] [bold gold1]{bookList.Count}[/] volumes on shelf · " +
+    $"[bold wheat1]{users.Count}[/] readers · [bold sandybrown]{admins.Count}[/] librarians.");
+
 while (true)
 {
     try
     {
-        Console.WriteLine();
-        AnsiConsole.Write(new Rule("[cyan1]Main Entrance[/]").RuleStyle("cyan1"));
+        PrintBookshelfDivider();
+        AnsiConsole.Write(new Rule("[gold1]✦ Library Foyer ✦[/]").RuleStyle("darkgoldenrod"));
 
         string mainChoice = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
-                .Title("[bold cyan1]Welcome to your DIGITAL LIBRARY! What would you like to do?[/]")
-                .HighlightStyle(new Style(Color.Cyan1, decoration: Decoration.Bold))
-                .AddChoices("1. Log-In", "2. Sign-Up", "3. Exit"));
+                .Title("[bold wheat1]🕯️  Welcome to the Hearth & Folio Reading Room. How may I assist you?[/]")
+                .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
+                .AddChoices(
+                    "1. 📖 Log-In to Your Account",
+                    "2. ✨ Register a Reader Card (Sign-Up)",
+                    "3. 🚪 Step Out of the Library (Exit)"));
 
-        // --------------------------------------------------------------------
-        // 2A. LOG-IN FLOW
-        // --------------------------------------------------------------------
         if (mainChoice.StartsWith("1."))
         {
-            AnsiConsole.Write(new Rule("[yellow]Log-In[/]").RuleStyle("yellow"));
+            string roleChoice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[bold wheat1]🪪  Which desk are you approaching?[/]")
+                    .HighlightStyle(new Style(Color.SandyBrown, decoration: Decoration.Bold))
+                    .AddChoices(
+                        "1. 📚 Reader Desk (User)",
+                        "2. 🗝️  Chief Librarian Desk (Admin)"));
+
+            AnsiConsole.Write(new Rule("[sandybrown]Sign the Guest Ledger[/]").RuleStyle("darkgoldenrod"));
 
             string name = AnsiConsole.Prompt(
-                new TextPrompt<string>("Enter [bold yellow]Your Name[/]:")
-                    .PromptStyle("yellow")
-                    .AllowEmpty());
+                new TextPrompt<string>("Enter [bold wheat1]Name[/]:")
+                    .PromptStyle("gold1")
+                    .AllowEmpty()).Trim();
 
             string password = AnsiConsole.Prompt(
-                new TextPrompt<string>("Enter [bold yellow]Your Password[/]:")
-                    .PromptStyle("yellow")
+                new TextPrompt<string>("Enter [bold wheat1]Passphrase[/]:")
+                    .PromptStyle("gold1")
                     .Secret()
                     .AllowEmpty());
 
-            var loggedInUser = users.FirstOrDefault(u => u.Name == name && u.Password == password);
-
-            if (loggedInUser == null)
-            {
-                throw new UnauthorizedAccessException("Invalid username or password!");
-            }
-
-            AnsiConsole.Write(
-                new Panel($"Welcome back, [bold cyan1]{loggedInUser.Name.EscapeMarkup()}[/]!")
-                    .Header("[green]Login Successful[/]")
-                    .Border(BoxBorder.Rounded)
-                    .BorderColor(Color.Green));
-
-            // ----------------------------------------------------------------
-            // 3. ROLE SELECTION (USER / ADMIN)
-            // ----------------------------------------------------------------
-            string roleChoice = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("[bold]Select Your Role:[/]")
-                    .HighlightStyle(new Style(Color.Green, decoration: Decoration.Bold))
-                    .AddChoices("1. User", "2. Admin"));
-
             if (roleChoice.StartsWith("1."))
             {
-                // ------------------------------------------------------------
-                // 4. USER MENU LOOP
-                // ------------------------------------------------------------
+                var loggedInUser = users.FirstOrDefault(u => u.Name == name && u.Password == password);
+
+                if (loggedInUser == null)
+                {
+                    throw new UnauthorizedAccessException("No matching reader card found for that name and passphrase.");
+                }
+
+                AnsiConsole.Write(
+                    new Panel(
+                        $"[wheat1]Pull up a leather armchair by the fire, [bold gold1]{loggedInUser.Name.EscapeMarkup()}[/].[/]\n" +
+                        $"[grey italic]Personal shelf currently holds [bold]{loggedInUser.PersonalBooks.Count}[/] book(s).[/]")
+                        .Header("[bold green3_1]☕ Reader Session Active[/]")
+                        .Border(BoxBorder.Rounded)
+                        .BorderColor(Color.DarkGoldenrod));
+
                 bool inUserMenu = true;
                 while (inUserMenu)
                 {
-                    Console.WriteLine();
-                    AnsiConsole.Write(new Rule($"[cyan1]User Menu — {loggedInUser.Name.EscapeMarkup()}[/]").RuleStyle("cyan1"));
+                    PrintBookshelfDivider();
+                    AnsiConsole.Write(new Rule($"[gold1]📚 Reader Study — {loggedInUser.Name.EscapeMarkup()}[/]").RuleStyle("darkgoldenrod"));
 
                     string userAction = AnsiConsole.Prompt(
                         new SelectionPrompt<string>()
-                            .Title("[bold cyan1]Choose an option:[/]")
-                            .HighlightStyle(new Style(Color.Cyan1, decoration: Decoration.Bold))
+                            .Title("[bold wheat1]Select your next chapter:[/]")
+                            .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
                             .AddChoices(
-                                "1. Browse & Search Library",
-                                "2. See Your Personal Library",
-                                "3. Log Out"));
+                                "1. 🔎 Browse & Search the Grand Catalog",
+                                "2. 📕 Manage Your Personal Bookshelf",
+                                "3. 🔐 Update Passphrase",
+                                "4. 🕯️  Log Out"));
 
                     if (userAction.StartsWith("1."))
                     {
-                        // Show full catalog in a styled table
-                        PrintBookTable(bookList, $"All Library Books ({bookList.Count})", Color.Cyan1);
+                        PrintBookTable(bookList, $"Grand Library Catalog ({bookList.Count} Volumes)", Color.DarkGoldenrod);
 
-                        // ----------------------------------------------------
-                        // 5. LIBRARY SEARCH & ADD SUBMENU LOOP
-                        // ----------------------------------------------------
                         bool inLibraryMenu = true;
                         while (inLibraryMenu)
                         {
                             Console.WriteLine();
-                            AnsiConsole.Write(new Rule("[magenta1]Library Actions[/]").RuleStyle("magenta1"));
+                            AnsiConsole.Write(new Rule("[sandybrown]Catalog Index & Discovery[/]").RuleStyle("darkgoldenrod"));
 
                             string libChoice = AnsiConsole.Prompt(
                                 new SelectionPrompt<string>()
-                                    .Title("[bold magenta1]What would you like to do in the library?[/]")
-                                    .HighlightStyle(new Style(Color.Magenta1, decoration: Decoration.Bold))
+                                    .Title("[bold wheat1]How would you like to search the shelves?[/]")
+                                    .HighlightStyle(new Style(Color.SandyBrown, decoration: Decoration.Bold))
                                     .AddChoices(
-                                        "1. Search Book By Title",
-                                        "2. Search Book By Author",
-                                        "3. Search Book By Release Year",
-                                        "4. Search Book By Genre",
-                                        "5. Search Book By Rating",
-                                        "6. Add Book To Your Personal Library",
-                                        "7. Back to User Menu"));
+                                        "1. 🏷️  Search by Title",
+                                        "2. ✍️  Search by Author",
+                                        "3. 📅 Search by Release Year",
+                                        "4. 🎭 Search by Genre",
+                                        "5. ⭐ Search by Rating",
+                                        "6. ➕ Shelve Book in Personal Library",
+                                        "7. ↩️  Return to Reader Study"));
 
-                            // --- 5.1 Search by Title ---
                             if (libChoice.StartsWith("1."))
                             {
                                 string titleQuery = AnsiConsole.Prompt(
-                                    new TextPrompt<string>("Enter [bold]title[/] to search:")
+                                    new TextPrompt<string>("Enter [bold wheat1]title[/] keyword:")
                                         .AllowEmpty()).Trim();
 
                                 var byTitle = bookList
@@ -144,11 +147,10 @@ while (true)
 
                                 PrintBookMatches(byTitle, $"title \"{titleQuery}\"");
                             }
-                            // --- 5.2 Search by Author ---
                             else if (libChoice.StartsWith("2."))
                             {
                                 string authorQuery = AnsiConsole.Prompt(
-                                    new TextPrompt<string>("Enter [bold]author[/] to search:")
+                                    new TextPrompt<string>("Enter [bold wheat1]author[/] name:")
                                         .AllowEmpty()).Trim();
 
                                 var byAuthor = bookList
@@ -157,12 +159,11 @@ while (true)
 
                                 PrintBookMatches(byAuthor, $"author \"{authorQuery}\"");
                             }
-                            // --- 5.3 Search by Release Year ---
                             else if (libChoice.StartsWith("3."))
                             {
                                 int year = AnsiConsole.Prompt(
-                                    new TextPrompt<int>("Enter [bold]release year[/] (e.g., 2006):")
-                                        .ValidationErrorMessage("[red]Please enter a valid 4-digit year.[/]"));
+                                    new TextPrompt<int>("Enter [bold wheat1]release year[/] (e.g., 2006):")
+                                        .ValidationErrorMessage("[red]Please enter a valid year.[/]"));
 
                                 var byYear = bookList
                                     .Where(b => b.ReleaseDate.Year == year)
@@ -170,43 +171,40 @@ while (true)
 
                                 PrintBookMatches(byYear, $"year {year}");
                             }
-                            // --- 5.4 Search by Genre ---
                             else if (libChoice.StartsWith("4."))
                             {
-                                var genres = Enum.GetValues<GENRE_FILE>();
                                 var selectedGenre = AnsiConsole.Prompt(
                                     new SelectionPrompt<GENRE_FILE>()
-                                        .Title("Select [bold]Genre[/]:")
-                                        .HighlightStyle(new Style(Color.Magenta1, decoration: Decoration.Bold))
-                                        .AddChoices(genres));
+                                        .Title("Choose a [bold wheat1]Genre[/]:")
+                                        .HighlightStyle(new Style(Color.SandyBrown, decoration: Decoration.Bold))
+                                        .UseConverter(g => g.GetDisplayName())
+                                        .AddChoices(Enum.GetValues<GENRE_FILE>()));
 
                                 var byGenre = bookList
                                     .Where(b => b.Genre == selectedGenre)
                                     .ToList();
 
-                                PrintBookMatches(byGenre, $"genre {selectedGenre}");
+                                PrintBookMatches(byGenre, $"genre {selectedGenre.GetDisplayName()}");
                             }
-                            // --- 5.5 Search by Rating ---
                             else if (libChoice.StartsWith("5."))
                             {
-                                var ratings = Enum.GetValues<RATING_FILE>();
                                 var selectedRating = AnsiConsole.Prompt(
                                     new SelectionPrompt<RATING_FILE>()
-                                        .Title("Select [bold]Rating[/]:")
-                                        .HighlightStyle(new Style(Color.Magenta1, decoration: Decoration.Bold))
-                                        .AddChoices(ratings));
+                                        .Title("Choose a [bold wheat1]Rating[/]:")
+                                        .HighlightStyle(new Style(Color.SandyBrown, decoration: Decoration.Bold))
+                                        .UseConverter(r => r.GetDisplayName())
+                                        .AddChoices(Enum.GetValues<RATING_FILE>()));
 
                                 var byRating = bookList
                                     .Where(b => b.Rating == selectedRating)
                                     .ToList();
 
-                                PrintBookMatches(byRating, $"rating {selectedRating}");
+                                PrintBookMatches(byRating, $"rating {selectedRating.GetDisplayName()}");
                             }
-                            // --- 5.6 Add Book to Personal Library ---
                             else if (libChoice.StartsWith("6."))
                             {
                                 string bookTitleToAdd = AnsiConsole.Prompt(
-                                    new TextPrompt<string>("Enter exact or partial [bold]title[/] of the book to add:")
+                                    new TextPrompt<string>("Enter exact or partial [bold wheat1]title[/] to add:")
                                         .AllowEmpty()).Trim();
 
                                 var bookToAdd = bookList.FirstOrDefault(b =>
@@ -216,19 +214,18 @@ while (true)
 
                                 if (bookToAdd == null)
                                 {
-                                    AnsiConsole.MarkupLine($"[yellow]No book matching \"{bookTitleToAdd.EscapeMarkup()}\" was found in the library.[/]");
+                                    AnsiConsole.MarkupLine($"[gold1]No volume matching \"{bookTitleToAdd.EscapeMarkup()}\" was found in the catalog.[/]");
                                 }
                                 else if (loggedInUser.PersonalBooks.Contains(bookToAdd))
                                 {
-                                    AnsiConsole.MarkupLine($"[yellow]\"{bookToAdd.Title.EscapeMarkup()}\" is already in your personal library.[/]");
+                                    AnsiConsole.MarkupLine($"[gold1]\"{bookToAdd.Title.EscapeMarkup()}\" is already on your personal shelf.[/]");
                                 }
                                 else
                                 {
                                     loggedInUser.PersonalBooks.Add(bookToAdd);
-                                    AnsiConsole.MarkupLine($"[green]Added \"{bookToAdd.Title.EscapeMarkup()}\" to your personal library![/]");
+                                    AnsiConsole.MarkupLine($"[green3_1]Shelved \"{bookToAdd.Title.EscapeMarkup()}\" in your personal library![/]");
                                 }
                             }
-                            // --- 5.7 Back to User Menu ---
                             else if (libChoice.StartsWith("7."))
                             {
                                 inLibraryMenu = false;
@@ -237,78 +234,298 @@ while (true)
                     }
                     else if (userAction.StartsWith("2."))
                     {
-                        // Show user's personal library
-                        if (loggedInUser.PersonalBooks.Count == 0)
+                        bool inPersonalLibraryMenu = true;
+                        while (inPersonalLibraryMenu)
                         {
+                            Console.WriteLine();
                             AnsiConsole.Write(
-                                new Panel("[grey]Your personal library is currently empty. Add books from Browse & Search Library![/]")
-                                    .Header("[cyan1]Your Personal Library[/]")
-                                    .Border(BoxBorder.Rounded)
-                                    .BorderColor(Color.Grey));
-                        }
-                        else
-                        {
-                            PrintBookTable(
-                                loggedInUser.PersonalBooks,
-                                $"{loggedInUser.Name}'s Personal Library ({loggedInUser.PersonalBooks.Count})",
-                                Color.Green);
+                                new Rule($"[gold1]📕 {loggedInUser.Name.EscapeMarkup()}'s Personal Bookshelf[/]")
+                                    .RuleStyle("darkgoldenrod"));
+
+                            if (loggedInUser.PersonalBooks.Count == 0)
+                            {
+                                AnsiConsole.Write(
+                                    new Panel("[wheat1 italic]Your personal shelf is quiet and empty. Browse the catalog to pick your first read![/]")
+                                        .Header("[bold wheat1]Personal Bookshelf[/]")
+                                        .Border(BoxBorder.Rounded));
+                            }
+                            else
+                            {
+                                PrintBookTable(
+                                    loggedInUser.PersonalBooks,
+                                    $"{loggedInUser.Name}'s Personal Bookshelf ({loggedInUser.PersonalBooks.Count})",
+                                    Color.DarkGoldenrod);
+                            }
+
+                            string personalChoice = AnsiConsole.Prompt(
+                                new SelectionPrompt<string>()
+                                    .Title("[bold wheat1]Bookshelf Actions:[/]")
+                                    .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
+                                    .AddChoices(
+                                        "1. ➕ Add Book to Personal Shelf",
+                                        "2. 🗑️ Remove Book from Personal Shelf",
+                                        "3. 🛠️ Make Another User Admin",
+                                        "4. ↩️  Back to Reader Study"));
+
+                            if (personalChoice.StartsWith("1."))
+                            {
+                                if (bookList.Count == 0)
+                                {
+                                    AnsiConsole.MarkupLine("[gold1]The main catalog has no books available right now.[/]");
+                                    continue;
+                                }
+
+                                string bookTitleToAdd = AnsiConsole.Prompt(
+                                    new TextPrompt<string>("Enter exact or partial [bold wheat1]title[/] to add:")
+                                        .AllowEmpty()).Trim();
+
+                                var bookToAdd = bookList.FirstOrDefault(b =>
+                                        b.Title.Equals(bookTitleToAdd, StringComparison.OrdinalIgnoreCase))
+                                    ?? bookList.FirstOrDefault(b =>
+                                        b.Title.Contains(bookTitleToAdd, StringComparison.OrdinalIgnoreCase));
+
+                                if (bookToAdd == null)
+                                {
+                                    AnsiConsole.MarkupLine($"[gold1]No book matching \"{bookTitleToAdd.EscapeMarkup()}\" was found.[/]");
+                                }
+                                else if (loggedInUser.PersonalBooks.Contains(bookToAdd))
+                                {
+                                    AnsiConsole.MarkupLine($"[gold1]\"{bookToAdd.Title.EscapeMarkup()}\" is already on your shelf.[/]");
+                                }
+                                else
+                                {
+                                    loggedInUser.PersonalBooks.Add(bookToAdd);
+                                    AnsiConsole.MarkupLine($"[green3_1]Added \"{bookToAdd.Title.EscapeMarkup()}\" to your personal shelf![/]");
+                                }
+                            }
+                            else if (personalChoice.StartsWith("2."))
+                            {
+                                if (loggedInUser.PersonalBooks.Count == 0)
+                                {
+                                    AnsiConsole.MarkupLine("[gold1]Your personal shelf has no books to remove.[/]");
+                                    continue;
+                                }
+
+                                string bookTitleToDelete = AnsiConsole.Prompt(
+                                    new TextPrompt<string>("Enter exact or partial [bold wheat1]title[/] to remove:")
+                                        .AllowEmpty()).Trim();
+
+                                var bookToDelete = loggedInUser.PersonalBooks.FirstOrDefault(b =>
+                                        b.Title.Equals(bookTitleToDelete, StringComparison.OrdinalIgnoreCase))
+                                    ?? loggedInUser.PersonalBooks.FirstOrDefault(b =>
+                                        b.Title.Contains(bookTitleToDelete, StringComparison.OrdinalIgnoreCase));
+
+                                if (bookToDelete == null)
+                                {
+                                    AnsiConsole.MarkupLine($"[gold1]No book matching \"{bookTitleToDelete.EscapeMarkup()}\" was found on your shelf.[/]");
+                                }
+                                else
+                                {
+                                    loggedInUser.PersonalBooks.Remove(bookToDelete);
+                                    AnsiConsole.MarkupLine($"[green3_1]Removed \"{bookToDelete.Title.EscapeMarkup()}\" from your personal shelf.[/]");
+                                }
+                            }
+
+                            else if (personalChoice.StartsWith("3."))
+                            {
+                                string userNameToPromote = AnsiConsole.Prompt(
+                                    new TextPrompt<string>("Enter exact [bold wheat1]name[/] of user to promote:")
+                                        .AllowEmpty()).Trim();
+                                var userToPromote = users.FirstOrDefault(u =>
+                                    u.Name.Equals(userNameToPromote, StringComparison.OrdinalIgnoreCase));
+                                if (userToPromote == null)
+                                {
+                                    AnsiConsole.MarkupLine($"[gold1]No reader card found for \"{userNameToPromote.EscapeMarkup()}\".[/]");
+                                }
+                                else if (admins.Any(a => a.Name.Equals(userToPromote.Name, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    AnsiConsole.MarkupLine($"[gold1]\"{userToPromote.Name.EscapeMarkup()}\" is already a librarian.[/]");
+                                }
+                                else
+                                {
+                                    admins.Add(new User(userToPromote.Name, userToPromote.Password));
+                                    AnsiConsole.MarkupLine($"[green3_1]Promoted \"{userToPromote.Name.EscapeMarkup()}\" to librarian status![/]");
+                                }
+                            }
+
+                            else if (personalChoice.StartsWith("4."))
+                            {
+                                inPersonalLibraryMenu = false;
+                            }
                         }
                     }
                     else if (userAction.StartsWith("3."))
                     {
+                        loggedInUser.ChangePassword();
+                    }
+                    else if (userAction.StartsWith("4."))
+                    {
                         inUserMenu = false;
-                        AnsiConsole.MarkupLine("[grey]You have been logged out.[/]");
+                        AnsiConsole.MarkupLine("[wheat1 italic]Bookmarks placed. You have logged out of the study.[/]");
                     }
                 }
             }
             else if (roleChoice.StartsWith("2."))
             {
+                var loggedInAdmin = admins.FirstOrDefault(a => a.Name == name && a.Password == password);
+
+                if (loggedInAdmin == null)
+                {
+                    throw new UnauthorizedAccessException("Invalid librarian credentials.");
+                }
+
                 AnsiConsole.Write(
-                    new Panel("[yellow]Admin menu is not implemented yet.[/]")
-                        .Header("[yellow]Admin[/]")
-                        .Border(BoxBorder.Rounded)
-                        .BorderColor(Color.Yellow));
+                    new Panel(
+                        $"[wheat1]Welcome to the archive desk, Librarian [bold gold1]{loggedInAdmin.Name.EscapeMarkup()}[/].[/]\n" +
+                        $"[grey italic]Catalog supervision & shelf curation enabled.[/]")
+                        .Header("[bold gold1]🗝️  Chief Librarian Authenticated[/]")
+                        .Border(BoxBorder.Double)
+                        .BorderColor(Color.Gold1));
+
+                bool inAdminMenu = true;
+                while (inAdminMenu)
+                {
+                    PrintBookshelfDivider();
+                    AnsiConsole.Write(new Rule($"[gold1]🗝️  Librarian Archive Desk — {loggedInAdmin.Name.EscapeMarkup()}[/]").RuleStyle("darkgoldenrod"));
+
+                    string adminAction = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title("[bold wheat1]Choose an archive task:[/]")
+                            .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
+                            .AddChoices(
+                                "1. 📚 Inspect All Cataloged Volumes",
+                                "2. ➕ Accession New Book into Catalog",
+                                "3. 🗑️  Deaccession / Remove Book from Catalog",
+                                "4. 🕯️  Log Out"));
+
+                    if (adminAction.StartsWith("1."))
+                    {
+                        PrintBookTable(bookList, $"Master Archive Catalog ({bookList.Count} Volumes)", Color.Gold1);
+                    }
+                    else if (adminAction.StartsWith("2."))
+                    {
+                        string title = AnsiConsole.Prompt(
+                            new TextPrompt<string>("Enter [bold wheat1]Book Title[/]:")
+                                .PromptStyle("gold1")).Trim();
+
+                        string author = AnsiConsole.Prompt(
+                            new TextPrompt<string>("Enter [bold wheat1]Author[/]:")
+                                .PromptStyle("gold1")).Trim();
+
+                        int year = AnsiConsole.Prompt(
+                            new TextPrompt<int>("Enter [bold wheat1]Release Year[/] (e.g., 2020):")
+                                .ValidationErrorMessage("[red]Please enter a valid year.[/]"));
+
+                        var genre = AnsiConsole.Prompt(
+                            new SelectionPrompt<GENRE_FILE>()
+                                .Title("Select [bold wheat1]Genre[/]:")
+                                .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
+                                .UseConverter(g => g.GetDisplayName())
+                                .AddChoices(Enum.GetValues<GENRE_FILE>()));
+
+                        var status = AnsiConsole.Prompt(
+                            new SelectionPrompt<STATUS_FILE>()
+                                .Title("Select [bold wheat1]Reading Status[/]:")
+                                .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
+                                .UseConverter(s => s.GetDisplayName())
+                                .AddChoices(Enum.GetValues<STATUS_FILE>()));
+
+                        var rating = AnsiConsole.Prompt(
+                            new SelectionPrompt<RATING_FILE>()
+                                .Title("Select [bold wheat1]Rating[/]:")
+                                .HighlightStyle(new Style(Color.Gold1, decoration: Decoration.Bold))
+                                .UseConverter(r => r.GetDisplayName())
+                                .AddChoices(Enum.GetValues<RATING_FILE>()));
+
+                        var newBook = new Book(
+                            title,
+                            author,
+                            new DateTime(year, 1, 1),
+                            genre,
+                            status,
+                            rating);
+
+                        bookList.Add(newBook);
+                        AnsiConsole.MarkupLine($"[green3_1]Accessioned \"{newBook.Title.EscapeMarkup()}\" into the library catalog![/]");
+                    }
+                    else if (adminAction.StartsWith("3."))
+                    {
+                        if (bookList.Count == 0)
+                        {
+                            AnsiConsole.MarkupLine("[gold1]The library catalog is already empty.[/]");
+                            continue;
+                        }
+
+                        string titleToDelete = AnsiConsole.Prompt(
+                            new TextPrompt<string>("Enter exact or partial [bold wheat1]title[/] to remove:")
+                                .AllowEmpty()).Trim();
+
+                        var bookToDelete = bookList.FirstOrDefault(b =>
+                                b.Title.Equals(titleToDelete, StringComparison.OrdinalIgnoreCase))
+                            ?? bookList.FirstOrDefault(b =>
+                                b.Title.Contains(titleToDelete, StringComparison.OrdinalIgnoreCase));
+
+                        if (bookToDelete == null)
+                        {
+                            AnsiConsole.MarkupLine($"[gold1]No book matching \"{titleToDelete.EscapeMarkup()}\" was found in the catalog.[/]");
+                        }
+                        else
+                        {
+                            bookList.Remove(bookToDelete);
+                            foreach (var u in users)
+                            {
+                                u.PersonalBooks.Remove(bookToDelete);
+                            }
+
+                            AnsiConsole.MarkupLine($"[green3_1]Removed \"{bookToDelete.Title.EscapeMarkup()}\" from the catalog and member shelves.[/]");
+                        }
+                    }
+                    else if (adminAction.StartsWith("4."))
+                    {
+                        inAdminMenu = false;
+                        AnsiConsole.MarkupLine("[wheat1 italic]Archive keys returned. You have logged out.[/]");
+                    }
+                }
             }
         }
-        // --------------------------------------------------------------------
-        // 2B. SIGN-UP FLOW
-        // --------------------------------------------------------------------
         else if (mainChoice.StartsWith("2."))
         {
-            AnsiConsole.Write(new Rule("[green]Sign-Up[/]").RuleStyle("green"));
+            AnsiConsole.Write(new Rule("[wheat1]Issue a New Reader Card[/]").RuleStyle("darkgoldenrod"));
 
             string newName = AnsiConsole.Prompt(
-                new TextPrompt<string>("Enter [bold green]Your Name[/]:")
-                    .PromptStyle("green")
+                new TextPrompt<string>("Choose a [bold wheat1]Reader Name[/]:")
+                    .PromptStyle("gold1")
                     .AllowEmpty()).Trim();
 
             string newPassword = AnsiConsole.Prompt(
-                new TextPrompt<string>("Enter [bold green]Your Password[/]:")
-                    .PromptStyle("green")
+                new TextPrompt<string>("Create a [bold wheat1]Passphrase[/]:")
+                    .PromptStyle("gold1")
                     .Secret()
                     .AllowEmpty());
 
             if (string.IsNullOrWhiteSpace(newName) || string.IsNullOrWhiteSpace(newPassword))
             {
-                AnsiConsole.MarkupLine("[red]Name and password cannot be empty.[/]");
+                AnsiConsole.MarkupLine("[red]Reader name and passphrase cannot be empty.[/]");
                 continue;
             }
 
             if (users.Any(u => u.Name.Equals(newName, StringComparison.OrdinalIgnoreCase)))
             {
-                AnsiConsole.MarkupLine("[yellow]A user with that name already exists.[/]");
+                AnsiConsole.MarkupLine("[gold1]A reader card with that name is already registered.[/]");
                 continue;
             }
 
             users.Add(new User(newName, newPassword));
-            AnsiConsole.MarkupLine($"[green]Account created for [bold]{newName.EscapeMarkup()}[/]! You can now log in.[/]");
+            AnsiConsole.MarkupLine($"[green3_1]Reader card issued for [bold]{newName.EscapeMarkup()}[/]! Welcome to the reading room.[/]");
         }
-        // --------------------------------------------------------------------
-        // 2C. EXIT APPLICATION
-        // --------------------------------------------------------------------
         else if (mainChoice.StartsWith("3."))
         {
-            AnsiConsole.MarkupLine("[cyan1]Goodbye! Happy reading.[/]");
+            Console.WriteLine();
+            AnsiConsole.Write(
+                new Panel("[wheat1 italic]May your next book linger long after the final page. Until next time![/]")
+                    .Header("[bold gold1]🕯️  Hearth & Folio Closed[/]")
+                    .Border(BoxBorder.Rounded));
+
             return;
         }
     }
@@ -316,52 +533,77 @@ while (true)
     {
         AnsiConsole.Write(
             new Panel($"[red]{ex.Message.EscapeMarkup()}[/]")
-                .Header("[red]Error[/]")
+                .Header("[red]Reading Room Notice[/]")
                 .Border(BoxBorder.Heavy)
                 .BorderColor(Color.Red));
     }
 }
 
-// ============================================================================
-// 6. HELPER FUNCTIONS (TABLE & SEARCH RESULT DISPLAY)
-// ============================================================================
+static async Task<List<T>> SafeReadList<T>(FILE_TYPE fileType)
+{
+    try
+    {
+        return await JsonHelper<T>.ReadFromJsonAsync(fileType);
+    }
+    catch
+    {
+        return new List<T>();
+    }
+}
+
+static void PrintReadingRoomBanner()
+{
+    AnsiConsole.MarkupLine("[darkgoldenrod]╔══════════════════════════════════════════════════════════════════════════╗[/]");
+    AnsiConsole.MarkupLine("[darkgoldenrod]║[/] [gold1 bold]        🕯️  HEARTH & FOLIO  ·  DIGITAL READING ROOM & ARCHIVE  🕯️        [/] [darkgoldenrod]║[/]");
+    AnsiConsole.MarkupLine("[darkgoldenrod]║[/] [wheat1 italic]              \"A room without books is like a body without a soul.\"         [/] [darkgoldenrod]║[/]");
+    AnsiConsole.MarkupLine("[darkgoldenrod]╚══════════════════════════════════════════════════════════════════════════╝[/]");
+}
+
+static void PrintBookshelfDivider()
+{
+    Console.WriteLine();
+    AnsiConsole.MarkupLine("[darkgoldenrod]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/]");
+    AnsiConsole.MarkupLine("[darkgoldenrod]  │█║▌│█║▌│█║▌│  [wheat1]✦  Quiet Shelves & Warm Lanterns  ✦[/]  │█║▌│█║▌│█║▌│[/]");
+    AnsiConsole.MarkupLine("[darkgoldenrod]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/]");
+}
+
 static void PrintBookMatches(List<Book> matches, string criteriaDescription)
 {
     if (matches.Count == 0)
     {
-        AnsiConsole.MarkupLine($"[yellow]No books found matching {criteriaDescription.EscapeMarkup()}.[/]");
+        AnsiConsole.MarkupLine($"[gold1]No volumes turned up for {criteriaDescription.EscapeMarkup()}.[/]");
         return;
     }
 
     PrintBookTable(
         matches,
-        $"Found {matches.Count} Book(s) — {criteriaDescription}",
-        Color.Yellow);
+        $"Catalog Matches ({matches.Count}) — {criteriaDescription}",
+        Color.SandyBrown);
 }
 
 static void PrintBookTable(IEnumerable<Book> books, string title, Color borderColor)
 {
     var table = new Table()
-        .Title($"[bold]{title.EscapeMarkup()}[/]")
+        .Title($"[bold gold1]📖 {title.EscapeMarkup()}[/]")
         .Border(TableBorder.Rounded)
         .BorderColor(borderColor);
 
-    table.AddColumn(new TableColumn("[bold]Title[/]"));
-    table.AddColumn(new TableColumn("[bold]Author[/]"));
-    table.AddColumn(new TableColumn("[bold]Year[/]").Centered());
-    table.AddColumn(new TableColumn("[bold]Genre[/]"));
-    table.AddColumn(new TableColumn("[bold]Status[/]"));
-    table.AddColumn(new TableColumn("[bold]Rating[/]"));
+    table.AddColumn(new TableColumn("[bold wheat1]Title[/]"));
+    table.AddColumn(new TableColumn("[bold wheat1]Author[/]"));
+    table.AddColumn(new TableColumn("[bold sandybrown]Year[/]").Centered());
+    table.AddColumn(new TableColumn("[bold gold1]Genre[/]"));
+    table.AddColumn(new TableColumn("[bold wheat1]Status[/]"));
+    table.AddColumn(new TableColumn("[bold gold1]Rating[/]"));
 
     foreach (var book in books)
     {
         table.AddRow(
-            book.Title.EscapeMarkup(),
-            book.Author.EscapeMarkup(),
-            book.ReleaseDate.Year.ToString(),
-            book.Genre.ToString().EscapeMarkup(),
-            book.Status.ToString().EscapeMarkup(),
-            book.Rating.ToString().EscapeMarkup());
+            $"[wheat1]{book.Title.EscapeMarkup()}[/]",
+            $"[wheat1]{book.Author.EscapeMarkup()}[/]",
+            $"[sandybrown]{book.ReleaseDate.Year}[/]",
+            $"[gold1]{book.Genre.GetDisplayName().EscapeMarkup()}[/]",
+            $"[wheat1]{book.Status.GetDisplayName().EscapeMarkup()}[/]",
+            $"[gold1]{book.Rating.GetDisplayName().EscapeMarkup()}[/]");
     }
 
     AnsiConsole.Write(table);

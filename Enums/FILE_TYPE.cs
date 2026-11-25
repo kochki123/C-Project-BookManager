@@ -7,6 +7,7 @@
         RATING_FILE = 2,
         STATUS_FILE = 3,
         USERS_FILE = 4,
-        MYBOOKS_FILE = 5
+        ADMIN_FILE = 5,
+        MYBOOKS_FILE = 6
     }
 }

@@ -17,6 +17,7 @@ namespace C_Project.Classes
             ReleaseDate = releaseDate;
             Genre = genre;
             Status = status;
+            Rating = rating;
         }
 
         public string Title { get; set; }
